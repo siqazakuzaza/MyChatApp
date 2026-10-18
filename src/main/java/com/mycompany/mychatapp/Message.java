@@ -19,23 +19,14 @@ public class Message {
     private static final java.util.List<Message> storedMessages = new java.util.ArrayList<>();
     private static int totalMessages = 0;
 
-    // Auto-incremented message number (starts at 0 for the first message)
-    private static int messageCounter = 0;
-
     private final String messageID;
     private final int numMessagesSent;
     private final String recipient;
     private final String message;
     private final String messageHash;
 
-    // Auto-numbered constructor: the message ID is randomly generated
-    // and the message number is generated and incremented automatically.
-    public Message(String recipient, String message) {
-        this(generateMessageID(), nextMessageNumber(), recipient, message);
-    }
-
-    // Constructor where the caller supplies the message number;
-    // the message ID is randomly generated
+    // Normal constructor: the message ID is randomly generated.
+    // numMessagesSent is the loop counter supplied by the main application.
     public Message(int numMessagesSent, String recipient, String message) {
         this(generateMessageID(), numMessagesSent, recipient, message);
     }
@@ -49,15 +40,11 @@ public class Message {
         this.messageHash = createMessageHash();
     }
 
-    // Generates a random ten-digit ID
+    // Generates a random ten-digit ID using java.util.Random and string manipulation:
+    // a random non-negative number is padded to 19 digits and cut to ten with substring.
     private static String generateMessageID() {
-        long number = (long) (new Random().nextDouble() * 10_000_000_000L);
-        return String.format("%010d", number);
-    }
-
-    // Returns the current message number and then increments the counter
-    private static int nextMessageNumber() {
-        return messageCounter++;
+        String digits = String.format("%019d", new Random().nextLong() & Long.MAX_VALUE);
+        return digits.substring(0, 10);
     }
 
     // ---------- Required methods ----------
@@ -78,7 +65,7 @@ public class Message {
                 + "an international code. Please correct the number and try again.";
     }
 
-    // Checks the 250 character limit (messages used by the unit tests)
+    // Checks the 250 character limit
     public static String checkMessageLength(String text) {
         if (text != null && text.length() > 250) {
             int over = text.length() - 250;
@@ -86,14 +73,6 @@ public class Message {
                     + ", please reduce the size.";
         }
         return "Message ready to send.";
-    }
-
-    // Checks the 250 character limit (messages shown to the user in the app)
-    public static String messageLengthFeedback(String text) {
-        if (text != null && text.length() > 250) {
-            return "Please enter a message of less than 250 characters.";
-        }
-        return "Message sent";
     }
 
     // Hash = first two ID digits : message number : FIRSTWORDLASTWORD
@@ -144,7 +123,11 @@ public class Message {
         return totalMessages;
     }
 
-    // Stores all "store for later" messages in a JSON file
+    // Stores all "store for later" messages in a JSON file.
+    // Attribution: the JSON structure follows the JSON specification (https://www.json.org)
+    // and the file is written with java.io.FileWriter
+    // (https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/io/FileWriter.html).
+    // TODO: replace/add the reference(s) you actually used when researching JSON storage.
     public boolean storeMessage() {
         StringBuilder json = new StringBuilder("[\n");
         for (int i = 0; i < storedMessages.size(); i++) {
@@ -199,6 +182,5 @@ public class Message {
         sentMessages.clear();
         storedMessages.clear();
         totalMessages = 0;
-        messageCounter = 0;
     }
 }

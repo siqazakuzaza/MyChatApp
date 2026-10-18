@@ -107,11 +107,22 @@ public class MessageTest {
 
     @Test
     public void testMessageIDCreated() {
-        // Fully auto-generated ID (Message uses java.util.Random): ten digits
-        Message m = new Message(RECIPIENT_1, MESSAGE_1);
+        // Fully auto-generated ID: must be a ten-digit number
+        Message m = new Message(0, RECIPIENT_1, MESSAGE_1);
         assertTrue(m.checkMessageID());
         assertTrue(m.getMessageID().matches("\\d{10}"));
         assertEquals("Message ID generated: " + m.getMessageID(), m.getMessageIDStatus());
+    }
+
+    @Test
+    public void testMessageIDLoop() {
+        // Test the auto-generated ID for several messages in a loop
+        for (int i = 0; i < 5; i++) {
+            Message m = new Message(i, RECIPIENT_1, MESSAGE_1);
+            assertTrue(m.checkMessageID());
+            assertTrue(m.getMessageID().matches("\\d{10}"));
+            assertEquals("Message ID generated: " + m.getMessageID(), m.getMessageIDStatus());
+        }
     }
 
     // ---------- MessageSent: send, disregard, store ----------

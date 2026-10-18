@@ -119,6 +119,7 @@ public class MyChatApp {
         int entered = 0; // messages entered so far (sent, stored or disregarded)
         boolean running = true;
 
+        // While loop: the menu runs until the user chooses to quit
         while (running) {
             System.out.println();
             System.out.println("1) Send Messages");
@@ -134,10 +135,12 @@ public class MyChatApp {
                                 + maxMessages + " messages.");
                         break;
                     }
-                    while (entered < maxMessages) {
-                        enterMessage(scanner, entered);
-                        entered++;
+                    // For loop: the user can only enter the assigned number of messages.
+                    // The loop counter i is also the message number (0 for the first message).
+                    for (int i = entered; i < maxMessages; i++) {
+                        enterMessage(scanner, i);
                     }
+                    entered = maxMessages;
                     System.out.println();
                     System.out.println("Total number of messages sent: "
                             + Message.returnTotalMessages());
