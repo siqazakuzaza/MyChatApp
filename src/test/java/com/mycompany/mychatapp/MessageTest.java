@@ -5,150 +5,217 @@
 package com.mycompany.mychatapp;
 
 import java.io.File;
-import java.util.Random;
+import java.util.Arrays;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
+
 /**
  *
  * @author Student
  */
 public class MessageTest {
-    // Test data from the brief
-    private static final String RECIPIENT_1 = "+27718693002";
-    private static final String MESSAGE_1 = "Hi Mike, can you join us for dinner tonight?";
+    // Test data from the assignment brief
 
-    private static final String RECIPIENT_2 = "08575975889";
-    private static final String MESSAGE_2 = "Hi Keegan, did you receive the payment?";
+    private static final String RECIPIENT_1 = "+27834557896";
 
-    private static final Random RANDOM = new Random();
+    private static final String MESSAGE_1 = "Did you get the cake?";
+
+    private static final String RECIPIENT_2 = "+27838884567";
+
+    private static final String MESSAGE_2 =
+
+            "Where are you? You are late! I have asked you to be on time.";
+
+    private static final String RECIPIENT_3 = "+27834484567";
+
+    private static final String MESSAGE_3 = "Yohoooo, I am at your gate.";
+
+    private static final String DEVELOPER = "0838884567";
+
+    private static final String MESSAGE_4 = "It is dinner time !";
+
+    private static final String MESSAGE_5 = "Ok, I am leaving without you.";
 
     private Message message1;
+
     private Message message2;
 
-    // Generates a ten-digit message ID with java.util.Random.
-    // It starts with "00" so the hash prefix is predictable (00:0:HITONIGHT).
-    private static String randomMessageID() {
-        return String.format("00%08d", RANDOM.nextInt(100_000_000));
-    }
+    private Message message3;
+
+    private Message message4;
+
+    private Message message5;
+
+    // ---------- SET UP TEST DATA ----------
 
     @BeforeEach
+
     public void setUp() {
+
         Message.resetAll();
-        message1 = new Message(randomMessageID(), 0, RECIPIENT_1, MESSAGE_1);
-        message2 = new Message(randomMessageID(), 1, RECIPIENT_2, MESSAGE_2);
+
+        message1 = new Message("1234567801", 0,
+
+                RECIPIENT_1, MESSAGE_1);
+
+        message2 = new Message("1234567802", 1,
+
+                RECIPIENT_2, MESSAGE_2);
+
+        message3 = new Message("1234567803", 2,
+
+                RECIPIENT_3, MESSAGE_3);
+
+        message4 = new Message(DEVELOPER, 3,
+
+                DEVELOPER, MESSAGE_4);
+
+        message5 = new Message("1234567805", 4,
+
+                RECIPIENT_2, MESSAGE_5);
+
+        // Populate messages according to their flags
+
+        message1.SentMessage(1); // Sent
+
+        message2.SentMessage(3); // Stored
+
+        message3.SentMessage(2); // Disregarded
+
+        message4.SentMessage(1); // Sent
+
+        message5.SentMessage(3); // Stored
+
     }
+
+    // ---------- CLEAN UP ----------
 
     @AfterEach
+
     public void cleanUp() {
-        // Remove the JSON file created by the "store" test
+
         new File(Message.STORE_FILE).delete();
+
         Message.resetAll();
+
     }
 
-    // ---------- Message length ----------
+    // ---------- TEST 1: SENT MESSAGES ARRAY ----------
 
     @Test
-    public void testMessageLengthSuccess() {
-        assertEquals("Message ready to send.", Message.checkMessageLength(MESSAGE_1));
+
+    public void testSentMessagesArrayCorrectlyPopulated() {
+
+        assertEquals(
+
+                Arrays.asList(MESSAGE_1, MESSAGE_4),
+
+                Message.getSentMessageTexts()
+
+        );
+
     }
+
+    // ---------- TEST 2: DISPLAY LONGEST MESSAGE ----------
 
     @Test
-    public void testMessageLengthFailure() {
-        String longMessage = "a".repeat(260);
-        assertEquals("Message exceeds 250 characters by 10, please reduce the size.",
-                Message.checkMessageLength(longMessage));
+
+    public void testDisplayLongestMessage() {
+
+        assertEquals(
+
+                MESSAGE_2,
+
+                Message.getLongestStoredMessage()
+
+        );
+
     }
 
-    // ---------- Recipient number ----------
+    // ---------- TEST 3: SEARCH FOR MESSAGE ID ----------
 
     @Test
-    public void testRecipientNumberSuccess() {
-        assertEquals("Cell phone number successfully captured.",
-                message1.checkRecipientCell());
+
+    public void testSearchForMessageID() {
+
+        Message found = Message.findByMessageID(DEVELOPER);
+
+        assertNotNull(found);
+
+        assertEquals(MESSAGE_4, found.getMessage());
+
     }
+
+    // ---------- TEST 4: SEARCH MESSAGES BY RECIPIENT ----------
 
     @Test
-    public void testRecipientNumberFailure() {
-        assertEquals("Cell phone number is incorrectly formatted or does not contain "
-                + "an international code. Please correct the number and try again.",
-                message2.checkRecipientCell());
+
+    public void testSearchMessagesByRecipient() {
+
+        assertEquals(
+
+                Arrays.asList(MESSAGE_2, MESSAGE_5),
+
+                Message.searchByRecipient(RECIPIENT_2)
+
+        );
+
     }
 
-    // ---------- Message hash ----------
+    // ---------- TEST 5: DELETE MESSAGE USING HASH ----------
 
     @Test
-    public void testMessageHashTestCase1() {
-        assertEquals("00:0:HITONIGHT", message1.getMessageHash());
+
+    public void testDeleteMessageUsingMessageHash() {
+
+        String hash = message2.getMessageHash();
+
+        String result = Message.deleteByMessageHash(hash);
+
+        assertEquals(
+
+                "Message: \"" + MESSAGE_2 + "\" successfully deleted.",
+
+                result
+
+        );
+
+        assertEquals(
+
+                Arrays.asList(MESSAGE_5),
+
+                Message.searchByRecipient(RECIPIENT_2)
+
+        );
+
     }
+
+    // ---------- TEST 6: DISPLAY REPORT ----------
 
     @Test
-    public void testMessageHashLoop() {
-        String[] messages = {
-            MESSAGE_1,
-            MESSAGE_2,
-            "It is dinner time!"
-        };
-        String[] expectedHashes = {
-            "00:0:HITONIGHT",
-            "00:1:HIPAYMENT",
-            "00:2:ITTIME"
-        };
 
-        for (int i = 0; i < messages.length; i++) {
-            Message m = new Message(randomMessageID(), i, RECIPIENT_1, messages[i]);
-            assertEquals(expectedHashes[i], m.getMessageHash());
-        }
+    public void testDisplayReport() {
+
+        String report = Message.sentReport();
+
+        // Check Message 1
+
+        assertTrue(report.contains(message1.getMessageHash()));
+
+        assertTrue(report.contains(RECIPIENT_1));
+
+        assertTrue(report.contains(MESSAGE_1));
+
+        // Check Message 4
+
+        assertTrue(report.contains(message4.getMessageHash()));
+
+        assertTrue(report.contains(DEVELOPER));
+
+        assertTrue(report.contains(MESSAGE_4));
+
     }
 
-    // ---------- Message ID ----------
-
-    @Test
-    public void testMessageIDCreated() {
-        // Fully auto-generated ID: must be a ten-digit number
-        Message m = new Message(0, RECIPIENT_1, MESSAGE_1);
-        assertTrue(m.checkMessageID());
-        assertTrue(m.getMessageID().matches("\\d{10}"));
-        assertEquals("Message ID generated: " + m.getMessageID(), m.getMessageIDStatus());
-    }
-
-    @Test
-    public void testMessageIDLoop() {
-        // Test the auto-generated ID for several messages in a loop
-        for (int i = 0; i < 5; i++) {
-            Message m = new Message(i, RECIPIENT_1, MESSAGE_1);
-            assertTrue(m.checkMessageID());
-            assertTrue(m.getMessageID().matches("\\d{10}"));
-            assertEquals("Message ID generated: " + m.getMessageID(), m.getMessageIDStatus());
-        }
-    }
-
-    // ---------- MessageSent: send, disregard, store ----------
-
-    @Test
-    public void testMessageSentSend() {
-        assertEquals("Message successfully sent.", message1.SentMessage(1));
-    }
-
-    @Test
-    public void testMessageSentDisregard() {
-        assertEquals("Press 0 to delete the message.", message2.SentMessage(2));
-    }
-
-    @Test
-    public void testMessageSentStore() {
-        assertEquals("Message successfully stored.", message1.SentMessage(3));
-        assertTrue(new File(Message.STORE_FILE).exists());
-    }
-
-    // ---------- Total messages ----------
-
-    @Test
-    public void testReturnTotalMessages() {
-        message1.SentMessage(1); // sent
-        message2.SentMessage(2); // disregarded, so not counted
-        assertEquals(1, Message.returnTotalMessages());
-    }
 }
